@@ -1,0 +1,16 @@
+/* Design tokens: colors, typography, and shared CSS variables. */
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Rajdhani:wght@500;600;700&display=swap");
+
+:root {
+  --bg: #060b16;
+  --bg-2: #0b1328;
+  --panel: rgba(12, 20, 40, 0.78);
+  --panel-strong: rgba(8, 14, 30, 0.9);
+  --text: #e8eefc;
+  --muted: #a8b5d6;
+  --accent: #49f2c2;
+  --accent-2: #66b8ff;
+  --line: rgba(133, 180, 255, 0.26);
+  --energy: #38bdf8;
+  --energy-dim: #1f2937;
+}

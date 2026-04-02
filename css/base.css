@@ -1,0 +1,31 @@
+/* Base styles: reset, document root layout, and global atmospheric background. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: block;
+  height: 100dvh;
+  overflow: hidden;
+  color: var(--text);
+  font-family: "Rajdhani", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 14% 8%, rgba(62, 209, 255, 0.17) 0%, transparent 38%),
+    radial-gradient(circle at 86% 84%, rgba(255, 134, 72, 0.16) 0%, transparent 43%),
+    linear-gradient(135deg, rgba(13, 23, 45, 0.75) 0%, rgba(5, 10, 20, 0.92) 65%),
+    var(--bg);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgba(142, 173, 235, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(142, 173, 235, 0.1) 1px, transparent 1px);
+  background-size: 34px 34px;
+}

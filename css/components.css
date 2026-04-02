@@ -1,0 +1,62 @@
+/* Component styles: buttons, action rows, and responsive adaptations. */
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: none;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Orbitron", sans-serif;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #032018;
+  background: linear-gradient(145deg, #49f2c2, #7af6db);
+  transition: filter 0.16s ease, transform 0.16s ease;
+}
+
+.hud-btn {
+  padding: 8px 12px;
+  min-height: 34px;
+}
+
+button.secondary {
+  color: #dff1ff;
+  background: linear-gradient(145deg, #2c4f92, #3c6ee0);
+}
+
+button.ghost {
+  color: #d7e6ff;
+  background: linear-gradient(145deg, #2f446d, #3a578a);
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  filter: grayscale(0.15);
+}
+
+button:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 720px) {
+  .hud {
+    padding: 10px;
+  }
+
+  .menu-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-config {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

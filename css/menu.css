@@ -1,0 +1,363 @@
+﻿/* Menu styles: overlays, dialogs, tabs, shop cards, and upgrade presentation. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: radial-gradient(circle at 15% 18%, rgba(37, 99, 235, 0.2), rgba(0, 0, 0, 0.74));
+  backdrop-filter: none;
+  padding: 16px;
+  z-index: 9;
+  overflow: hidden;
+}
+
+body.ui-lite .overlay {
+  background: rgba(2, 6, 16, 0.82);
+}
+
+.overlay.show {
+  display: grid;
+}
+
+/* --- Dialog shell --------------------------------------------------------- */
+.dialog {
+  width: min(96vw, 1040px);
+  height: min(92dvh, 760px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(73, 242, 194, 0.07), transparent 40%),
+    linear-gradient(155deg, rgba(11, 20, 39, 0.97), rgba(8, 14, 28, 0.97));
+  border: 1px solid rgba(128, 184, 255, 0.28);
+  border-radius: 18px;
+  box-shadow: 0 16px 32px rgba(2, 6, 14, 0.52);
+}
+
+body.ui-lite .dialog {
+  background: linear-gradient(160deg, rgba(8, 14, 26, 0.98), rgba(7, 12, 23, 0.98));
+  box-shadow: 0 10px 20px rgba(2, 6, 14, 0.42);
+}
+
+.dialog.compact {
+  width: min(92vw, 420px);
+  max-height: none;
+  padding: 28px;
+  display: block;
+  text-align: center;
+}
+
+.dialog h2 {
+  margin: 0 0 6px;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dialog p {
+  margin: 0 0 6px;
+  color: var(--muted);
+}
+
+/* --- Header --------------------------------------------------------------- */
+.menu-head {
+  padding: 14px 18px 8px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(133, 180, 255, 0.14);
+}
+
+.menu-kicker {
+  display: inline-block;
+  margin-bottom: 4px;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+/* --- Tabs nav ------------------------------------------------------------- */
+.menu-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 6px 18px 0;
+  border-bottom: 1px solid rgba(133, 180, 255, 0.18);
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px 9px;
+  border: none;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease;
+}
+
+.tab-btn:hover {
+  color: var(--text);
+  background: rgba(133, 180, 255, 0.06);
+  filter: none;
+}
+
+.tab-btn.active {
+  color: #7dd3fc;
+  background: rgba(125, 211, 252, 0.08);
+}
+
+.tab-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #22d3ee, #38bdf8);
+  border-radius: 2px 2px 0 0;
+}
+
+.tab-icon {
+  font-size: 13px;
+}
+
+/* --- Tab panels ------------------------------------------------------------ */
+.tab-panel {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 10px 18px;
+}
+
+.tab-panel.active {
+  display: grid;
+  align-content: start;
+}
+
+/* --- Config bar (Nave tab) ------------------------------------------------ */
+.menu-config {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  text-align: left;
+  background: linear-gradient(160deg, rgba(9, 16, 33, 0.88), rgba(6, 11, 24, 0.88));
+  border: 1px solid rgba(133, 180, 255, 0.2);
+  font-size: 12px;
+}
+
+/* --- Actions bar ---------------------------------------------------------- */
+.menu-actions {
+  padding: 10px 18px 12px;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(133, 180, 255, 0.14);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(172px, 1fr));
+  gap: 8px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* --- Shop grid ------------------------------------------------------------ */
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.skin-card {
+  position: relative;
+  background: linear-gradient(165deg, rgba(8, 14, 30, 0.9), rgba(12, 21, 43, 0.8));
+  border: 1px solid rgba(133, 180, 255, 0.22);
+  border-radius: 10px;
+  padding: 8px;
+  display: grid;
+  gap: 5px;
+  text-align: left;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+  overflow: hidden;
+}
+
+.skin-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(73, 242, 194, 0.42);
+}
+
+.skin-card.selected {
+  border-color: rgba(73, 242, 194, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(73, 242, 194, 0.36);
+}
+
+.skin-card.tier-common    { border-color: rgba(148, 163, 184, 0.32); }
+.skin-card.tier-rare      { border-color: rgba(59, 130, 246, 0.48);  box-shadow: 0 0 16px rgba(59, 130, 246, 0.14); }
+.skin-card.tier-epic      { border-color: rgba(168, 85, 247, 0.56);  box-shadow: 0 0 18px rgba(168, 85, 247, 0.18); }
+.skin-card.tier-legendary { border-color: rgba(251, 191, 36, 0.66);  box-shadow: 0 0 20px rgba(251, 191, 36, 0.22); }
+
+.skin-card.reveal::before {
+  content: "";
+  position: absolute;
+  left: -120%;
+  top: 0;
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0), rgba(165, 243, 252, 0.45), rgba(34, 211, 238, 0));
+  transform: skewX(-18deg);
+  animation: scanReveal 900ms ease-out forwards;
+  pointer-events: none;
+}
+
+.skin-card.reveal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(125, 211, 252, 0.14) 0,
+    rgba(125, 211, 252, 0.14) 2px,
+    rgba(125, 211, 252, 0) 4px,
+    rgba(125, 211, 252, 0) 8px
+  );
+  animation: hologramLines 900ms ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes scanReveal {
+  0%   { left: -120%; }
+  100% { left: 150%; }
+}
+
+@keyframes hologramLines {
+  0%   { opacity: 0.75; }
+  100% { opacity: 0; }
+}
+
+.skin-preview {
+  width: 100%;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: radial-gradient(circle at 50% 20%, #223460 0%, #0a1228 70%);
+  overflow: hidden;
+}
+
+.skin-preview img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.ship-preview-canvas {
+  width: 100%;
+  max-width: 122px;
+  height: 62px;
+  border-radius: 6px;
+  image-rendering: pixelated;
+}
+
+.skin-name  { font-weight: 700; font-size: 13px; }
+.skin-price { color: #cbd5e1; font-size: 11px; }
+
+.skin-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skin-stats span {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(133, 180, 255, 0.14);
+  color: #dbeafe;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+/* --- Upgrade panel (Arsenal tab) ----------------------------------------- */
+.upgrade-panel {
+  padding: 10px;
+  border-radius: 10px;
+  background: linear-gradient(170deg, rgba(7, 14, 28, 0.9), rgba(5, 10, 23, 0.8));
+  border: 1px solid rgba(133, 180, 255, 0.2);
+}
+
+.upgrade-panel h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-family: "Orbitron", sans-serif;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.upgrade-note {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.upgrade-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.upgrade-card {
+  background: rgba(12, 19, 37, 0.76);
+  border: 1px solid rgba(133, 180, 255, 0.18);
+  border-radius: 9px;
+  padding: 8px 9px;
+}
+
+.upgrade-name {
+  font-weight: 700;
+  font-size: 12px;
+  margin-bottom: 2px;
+  color: #e2e8f0;
+}
+
+.upgrade-desc {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.25;
+}
+
+@media (max-width: 900px) {
+  .dialog {
+    width: min(96vw, 860px);
+    height: min(92dvh, 720px);
+  }
+
+  .shop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .upgrade-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

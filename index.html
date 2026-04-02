@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Galaxy Game - HTML</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23091226'/%3E%3Cpath d='M32 8L42 30H22L32 8Z' fill='%2338bdf8'/%3E%3Ccircle cx='32' cy='42' r='10' fill='%2349f2c2'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="game-wrap">
+    <div class="cockpit-layout">
+      <aside class="hud hud-side hud-left-panel">
+        <div class="hud-brand hud-block">
+          <div class="hud-section-label">Panel de vuelo</div>
+          <div class="hud-kicker">Sector Argos</div>
+          <div class="hud-title">Cabina Tactica</div>
+          <div class="controls-copy">WASD/Flechas para moverte, Espacio dispara, Shift hace dash y Esc pausa</div>
+        </div>
+
+        <div class="hud-energy-panel hud-block">
+          <div class="hud-section-label">Nucleo</div>
+          <div class="meter hud-meter">
+            <div class="meter-head">
+              <div class="meter-label">Reactor</div>
+              <div class="meter-copy">Integridad y reserva de la nave activa</div>
+            </div>
+            <div class="energy-bar"><div id="energyFill" class="energy-fill"></div></div>
+          </div>
+        </div>
+
+        <div class="hud-stack">
+          <div class="pill hud-card hud-card-vital" id="livesLabel" data-kicker="Blindaje">Vidas: 3</div>
+          <div class="pill hud-card hud-card-wave" id="waveLabel" data-kicker="Sector">Oleada: 1</div>
+          <div class="pill hud-card hud-card-combo" id="comboLabel" data-kicker="Impulso">Combo: x1.0</div>
+          <div class="pill hud-card hud-card-dash" id="dashLabel" data-kicker="Maniobra">Dash: listo</div>
+        </div>
+      </aside>
+
+      <div class="game-stage">
+        <canvas id="game" width="960" height="720"></canvas>
+      </div>
+
+      <aside class="hud hud-side hud-right-panel">
+        <div class="hud-utility hud-block">
+          <div class="hud-section-label">Sistema</div>
+          <div class="difficulty quality-select">
+            <label for="performancePreset">Preset:</label>
+            <select id="performancePreset">
+              <option value="performance">Rendimiento</option>
+              <option value="balanced" selected>Balanceado</option>
+              <option value="quality">Calidad</option>
+            </select>
+          </div>
+          <div class="difficulty quality-select">
+            <label for="uiMode">UI:</label>
+            <select id="uiMode">
+              <option value="standard" selected>Estandar</option>
+              <option value="lite">Ligera</option>
+            </select>
+          </div>
+          <div class="difficulty quality-select">
+            <label for="hudDensity">HUD:</label>
+            <select id="hudDensity">
+              <option value="normal" selected>Normal</option>
+              <option value="compact">Compacto</option>
+            </select>
+          </div>
+          <div class="difficulty quality-select">
+            <label for="displayMode">Vista:</label>
+            <select id="displayMode">
+              <option value="window" selected>Ventana</option>
+              <option value="fullscreen">Pantalla completa</option>
+            </select>
+          </div>
+          <div class="difficulty quality-select">
+            <label for="audioProfile">Audio:</label>
+            <select id="audioProfile">
+              <option value="lite" selected>Lite</option>
+              <option value="immersive">Inmersivo</option>
+            </select>
+          </div>
+          <div class="audio-mix">
+            <label for="audioMaster">Master</label>
+            <input id="audioMaster" type="range" min="0" max="100" step="1" value="80" />
+            <label for="audioSfx">SFX</label>
+            <input id="audioSfx" type="range" min="0" max="100" step="1" value="85" />
+            <label for="audioUi">UI</label>
+            <input id="audioUi" type="range" min="0" max="100" step="1" value="70" />
+                      <label for="audioMusic">Música</label>
+                      <input id="audioMusic" type="range" min="0" max="100" step="1" value="50" />
+          </div>
+          <div class="audio-mix">
+            <label for="shakeToggle">Screen Shake</label>
+            <input id="shakeToggle" type="checkbox" checked />
+            <label for="particlesToggle">Partículas</label>
+            <input id="particlesToggle" type="checkbox" checked />
+            <label for="colorblindToggle">Colorblind</label>
+            <input id="colorblindToggle" type="checkbox" />
+          </div>
+          <button class="secondary hud-btn" id="pauseBtn">Pausar</button>
+        </div>
+
+        <div class="hud-stack">
+          <div class="pill hud-card hud-card-economy" id="coinsLabel" data-kicker="Credito">Monedas: 0</div>
+          <div class="pill hud-card hud-card-rare" id="rareLabel" data-kicker="Moneda rara">Nucleos: 0</div>
+          <div class="pill hud-card hud-card-score" id="scoreLabel" data-kicker="Registro">Score: 0</div>
+          <div class="pill hud-card hud-card-special" id="specialLabel" data-kicker="Definitiva">Especial: 0%</div>
+          <div class="pill hud-card hud-card-wide" id="buffLabel" data-kicker="Buffs">Buffs: sin activos</div>
+          <div class="pill hud-card hud-card-wide" id="powerLabel" data-kicker="Carga activa">Mejora: Doble (base)</div>
+          <div class="pill hud-card hud-card-wide" id="eventLabel" data-kicker="Evento">Evento: estable</div>
+          <div class="pill hud-card hud-card-wide hud-card-objective" id="objectiveLabel" data-kicker="Mision">Objetivo: esperando oleada</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div id="intermissionScreen" class="overlay" aria-hidden="true">
+    <div class="dialog intermission-dialog">
+      <div class="menu-head">
+        <div class="menu-kicker">Mercado Tactico</div>
+        <h2>Tienda entre rondas</h2>
+        <p id="intermissionWaveText">Preparando oleada</p>
+      </div>
+      <div class="intermission-meta">
+        <div id="intermissionCoins">Monedas: 0</div>
+        <div id="intermissionRare">Nucleos: 0</div>
+        <div id="intermissionRerolls">Reroll: 2</div>
+      </div>
+      <div id="intermissionHint" class="intermission-hint">Mercado en analisis tactico.</div>
+      <div id="intermissionEconomySummary" class="intermission-summary">Gasto run: 0 monedas · 0 nucleos · 0 acciones.</div>
+      <div id="intermissionOffers" class="intermission-offers"></div>
+      <div class="actions menu-actions">
+        <button class="ghost" id="intermissionRerollBtn">Reroll</button>
+        <button class="ghost" id="intermissionLockBtn">Bloquear oferta</button>
+        <button class="ghost" id="intermissionTransmuteBtn">Transmutar buff</button>
+        <button id="intermissionContinueBtn">Continuar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="startScreen" class="overlay show" aria-hidden="false">
+    <div class="dialog">
+      <div class="menu-head">
+        <div class="menu-kicker">Comando Estelar</div>
+        <h2>Galaxy Game</h2>
+        <p id="menuStateText">Configura tu nave y comienza una nueva partida.</p>
+      </div>
+
+      <div class="menu-tabs" role="tablist">
+        <button class="tab-btn active" role="tab" data-tab="nave" aria-selected="true">
+          <span class="tab-icon">◈</span> Nave
+        </button>
+        <button class="tab-btn" role="tab" data-tab="arsenal" aria-selected="false">
+          <span class="tab-icon">⚡</span> Arsenal
+        </button>
+      </div>
+
+      <div class="tab-panel active" id="tab-nave" role="tabpanel">
+        <div class="menu-config">
+          <div class="difficulty">
+            <label for="difficulty">Dificultad:</label>
+            <select id="difficulty">
+              <option value="easy">Facil</option>
+              <option value="normal" selected>Normal</option>
+              <option value="hard">Dificil</option>
+              <option value="brutal">Brutal</option>
+            </select>
+          </div>
+          <div id="bankCoins">Monedas totales: 0</div>
+          <div id="selectedSkinText">Skin activa: Falcon Azul</div>
+          <div id="defaultUpgradeText">Mejora base: Doble</div>
+        </div>
+        <div id="skinGrid" class="shop-grid"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-arsenal" role="tabpanel">
+        <div class="upgrade-panel">
+          <h3>Mejoras de partida <span class="upgrade-note">(30 seg · caen de enemigos)</span></h3>
+          <div class="upgrade-grid">
+            <div class="upgrade-card">
+              <div class="upgrade-name">Doble</div>
+              <div class="upgrade-desc">Dos proyectiles en paralelo.</div>
+            </div>
+            <div class="upgrade-card">
+              <div class="upgrade-name">Cono</div>
+              <div class="upgrade-desc">Tres proyectiles con apertura lateral.</div>
+            </div>
+            <div class="upgrade-card">
+              <div class="upgrade-name">Dispersion</div>
+              <div class="upgrade-desc">Cinco proyectiles en abanico amplio. Reemplaza Doble/Cono.</div>
+            </div>
+            <div class="upgrade-card">
+              <div class="upgrade-name">Francotirador</div>
+              <div class="upgrade-desc">Proyectil enorme y ultraveloz. Disparo lento. Excluye Rafaga y Sobrecarga.</div>
+            </div>
+            <div class="upgrade-card">
+              <div class="upgrade-name">Rafaga</div>
+              <div class="upgrade-desc">Dos proyectiles flanqueadores extra por disparo.</div>
+            </div>
+            <div class="upgrade-card">
+              <div class="upgrade-name">Retrocohete</div>
+              <div class="upgrade-desc">Disparo extra hacia atras. Compatible con todo.</div>
+            </div>
+            <div class="upgrade-card">
+              <div class="upgrade-name">Rapido</div>
+              <div class="upgrade-desc">Cadencia al minimo.</div>
+            </div>
+            <div class="upgrade-card">
+              <div class="upgrade-name">Sobrecarga</div>
+              <div class="upgrade-desc">Proyectiles mas grandes y veloces. Excluye Francotirador.</div>
+            </div>
+            <div class="upgrade-card">
+              <div class="upgrade-name">Ricochet</div>
+              <div class="upgrade-desc">Los disparos rebotan en los bordes laterales hasta 2 veces.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions menu-actions">
+        <button id="startBtn">Iniciar nueva partida</button>
+        <button class="secondary hidden" id="continueBtn">Continuar partida</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameOver" class="overlay" aria-hidden="true">
+    <div class="dialog compact">
+      <h2>Game Over</h2>
+      <p id="finalScore">Score final: 0</p>
+      <p id="finalCoins">Monedas ganadas: 0</p>
+      <div class="actions">
+        <button id="restartBtn">Jugar de nuevo</button>
+        <button class="secondary" id="menuBtn">Volver al menu</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/core/constants.js"></script>
+  <script src="js/core/helpers.js"></script>
+  <script src="js/core/state.js"></script>
+  <script src="js/ui/ui.js"></script>
+  <script src="js/gameplay/session.js"></script>
+  <script src="js/gameplay/player-combat.js"></script>
+  <script src="js/gameplay/power-ups.js"></script>
+  <script src="js/gameplay/enemies.js"></script>
+  <script src="js/gameplay/boss.js"></script>
+  <script src="js/gameplay/collisions.js"></script>
+  <script src="js/gameplay/game-loop.js"></script>
+  <script src="js/render/render.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
