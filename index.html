@@ -168,6 +168,7 @@
             </select>
           </div>
           <div id="bankCoins">Monedas totales: 0</div>
+          <div id="profileStats" class="profile-stats">Record: 0 · Mejor oleada: 0</div>
           <div id="selectedSkinText">Skin activa: Falcon Azul</div>
           <div id="defaultUpgradeText">Mejora base: Doble</div>
         </div>
@@ -219,6 +220,7 @@
       </div>
 
       <div class="actions menu-actions">
+        <button class="hidden" id="resumeBtn">Reanudar partida</button>
         <button id="startBtn">Iniciar nueva partida</button>
         <button class="secondary hidden" id="continueBtn">Continuar partida</button>
       </div>
@@ -230,6 +232,7 @@
       <h2>Game Over</h2>
       <p id="finalScore">Score final: 0</p>
       <p id="finalCoins">Monedas ganadas: 0</p>
+      <p id="finalRecord" class="final-record"></p>
       <div class="actions">
         <button id="restartBtn">Jugar de nuevo</button>
         <button class="secondary" id="menuBtn">Volver al menu</button>
@@ -240,6 +243,7 @@
   <script src="js/core/constants.js"></script>
   <script src="js/core/helpers.js"></script>
   <script src="js/core/state.js"></script>
+  <script src="js/core/save.js"></script>
   <script src="js/ui/ui.js"></script>
   <script src="js/gameplay/session.js"></script>
   <script src="js/gameplay/player-combat.js"></script>

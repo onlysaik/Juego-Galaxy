@@ -390,6 +390,9 @@ function createAudioEngine() {
   let droneGain    = null;  // A1: drone gain node
   let comboStingerCooldown = 0;  // S2: prevents spam
   let lastHitPitchVar = 0;  // S7: last pitch variation for hit
+  let musicFadeTimerId = null; // fade-out pendiente (se cancela al reiniciar musica)
+  let bossModeToken = 0;       // invalida callbacks de stinger de partidas anteriores
+  let bossModeTarget = false;  // ultimo modo jefe solicitado
 
   // D — Vibrato: lfo sine oscillator → lfoGain → osc.frequency (AudioParam mod).
   function addVibrato(osc, t, noteDur, depthHz) {
@@ -558,12 +561,17 @@ function createAudioEngine() {
 
   function stopBiomeDrone() {
     if (!droneOsc) return;
-    const now = audioCtx.currentTime;
-    droneGain.gain.setTargetAtTime(0.0001, now, 0.6);
+    // Capturar los nodos actuales: si se arranca un drone nuevo durante el fade,
+    // el timeout no debe detener ni anular el nuevo.
+    const osc = droneOsc;
+    const gain = droneGain;
+    droneOsc = null;
+    droneGain = null;
+    gain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.6);
     setTimeout(() => {
-      droneOsc.stop();
-      droneOsc = null;
-      droneGain = null;
+      try { osc.stop(); } catch (_) { /* ya detenido */ }
+      osc.disconnect();
+      gain.disconnect();
     }, 650);
   }
 
@@ -741,7 +749,9 @@ function createAudioEngine() {
     musicGain.gain.setValueAtTime(musicGain.gain.value, now);
     musicGain.gain.linearRampToValueAtTime(0.0001, now + dur);
     
-    setTimeout(() => {
+    clearPendingMusicFade();
+    musicFadeTimerId = setTimeout(() => {
+      musicFadeTimerId = null;
       seqActive = false;
       if (seqTimerId !== null) { clearInterval(seqTimerId); seqTimerId = null; }
       stopBiomeDrone();
@@ -749,8 +759,26 @@ function createAudioEngine() {
     }, Math.ceil(dur * 1000) + 60);
   }
 
+  function clearPendingMusicFade() {
+    if (musicFadeTimerId !== null) {
+      clearTimeout(musicFadeTimerId);
+      musicFadeTimerId = null;
+    }
+  }
+
   function startMusic() {
+    // Reinicio rapido tras Game Over: cancelar el fade pendiente para que su
+    // timeout no apague la musica de la nueva partida.
+    if (musicFadeTimerId !== null) {
+      clearPendingMusicFade();
+      stopMusic();
+      const now = audioCtx.currentTime;
+      musicGain.gain.cancelScheduledValues(now);
+      musicGain.gain.setValueAtTime(musicBaseGain, now);
+    }
     if (seqActive) return;
+    bossModeToken += 1;
+    bossModeTarget = false;
     seqActive    = true;
     seqBossMode  = false;
     seqStep      = 0;
@@ -769,7 +797,9 @@ function createAudioEngine() {
     musicGain.gain.cancelScheduledValues(now);
     musicGain.gain.setValueAtTime(musicGain.gain.value, now);
     musicGain.gain.linearRampToValueAtTime(0.0001, now + dur);
-    setTimeout(() => {
+    clearPendingMusicFade();
+    musicFadeTimerId = setTimeout(() => {
+      musicFadeTimerId = null;
       seqActive = false;
       if (seqTimerId !== null) { clearInterval(seqTimerId); seqTimerId = null; }
       musicGain.gain.setValueAtTime(musicBaseGain, audioCtx.currentTime);
@@ -820,12 +850,17 @@ function createAudioEngine() {
   }
 
   function setBossMusicMode(active) {
-    if (seqBossMode === !!active) return;
+    // Comparar contra el modo pedido (no solo el aplicado): durante el stinger
+    // seqBossMode aun es false y un setBossMode(false) debe poder cancelarlo.
+    if (bossModeTarget === !!active) return;
+    bossModeTarget = !!active;
     if (active) {
       // M3: Start tempo transition before stinger
       setBossMusicTransition(true);
       // B: play stinger, then switch to 16-bit mode
+      const token = ++bossModeToken;
       playBossStinger(() => {
+        if (token !== bossModeToken || !seqActive) return;
         seqBossMode = true;
         seqStep     = 0;
         seqCycle    = 0;
@@ -833,6 +868,7 @@ function createAudioEngine() {
         musicGain.gain.setTargetAtTime(Math.min(musicBaseGain * 1.30, 1), audioCtx.currentTime, 0.25);
       });
     } else {
+      bossModeToken += 1;
       seqBossMode = false;
       seqBossTransitioning = false;  // M3: reset transition state
       seqStep     = 0;

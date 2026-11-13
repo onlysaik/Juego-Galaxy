@@ -1,4 +1,4 @@
-// Power-up system: stacking logic, compatibility resolution, drops, and update tick.
+﻿// Power-up system: stacking logic, compatibility resolution, drops, and update tick.
 
 // Spread modes are mutually exclusive. Some modifier modes conflict with specific spreads.
 // Returns a new Set with newType integrated, removing incompatible modes.
@@ -57,7 +57,10 @@ function applyOrExtendPowerUp(type) {
   }
 
   activePowerUp.modes = resolveUpgradeCompatibility(activePowerUp.modes, type);
-  activePowerUp.timer += POWER_UP_STACK_BONUS_FRAMES;
+  activePowerUp.timer = Math.min(
+    activePowerUp.timer + POWER_UP_STACK_BONUS_FRAMES,
+    POWER_UP_DURATION_FRAMES * 2
+  );
   // S1: Play power-up SFX
   audioEngine.playPowerUpSFX(type);
 

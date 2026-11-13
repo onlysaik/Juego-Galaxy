@@ -361,3 +361,20 @@ body.ui-lite .dialog {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* --- Perfil persistente y records ----------------------------------------- */
+.profile-stats {
+  flex-basis: 100%;
+  color: #9fc3ea;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.final-record {
+  color: #9fc3ea;
+  font-size: 13px;
+}
+
+.final-record.new-record {
+  color: #fde68a;
+  font-weight: 700;
+}

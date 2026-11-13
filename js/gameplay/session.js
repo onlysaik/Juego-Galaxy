@@ -1,9 +1,12 @@
-// Session flow: game start, player damage, and run end state.
+﻿// Session flow: game start, player damage, and run end state.
 function addFloatingText(text, x, y, kind = "score") {
   floatingTexts.push({ text, x, y, kind, life: 72, vy: -0.62 });
 }
 
-function runStartNewGame() {
+function runStartNewGame(options = {}) {
+  // Una partida nueva descarta el punto de control (salvo al reanudarlo).
+  if (!options.preserveCheckpoint) clearRunCheckpoint();
+  releaseAllKeys();
   difficulty = getDifficultyConfig();
   const selectedSkinData = getSkinById(selectedSkin);
   const skinStats = getSkinStatSheet(selectedSkinData.id);
@@ -36,6 +39,9 @@ function runStartNewGame() {
   coinsRun = 0;
   rareCoresRun = 0;
   lives = 3;
+  killsRun = 0;
+  bossesDefeatedRun = 0;
+  audioAdaptiveCounter = 0;
   shootCooldown = 0;
   damageCooldown = 0;
   running = true;
@@ -108,6 +114,7 @@ function runStartNewGame() {
   gameOverOverlay.setAttribute("aria-hidden", "true");
   setMenuVisibility(false);
   closeIntermissionShop();
+  audioEngine.setBossMode(false);
   audioEngine.startMusic();
   updateHud();
 }
@@ -182,6 +189,7 @@ function processSpecialPulseQueue() {
     if (enemy.hp <= 0) {
       const wasAggressive = true;
       anyDefeated = true;
+      killsRun += 1;
       score += 10 * difficulty.scoreMult;
       coinsRun += (enemy.coinReward || 1) * difficulty.coinMult;
       spawnEnemyMicroExplosion(enemy);
@@ -319,8 +327,16 @@ function endRun() {
   cameraShakeFrames = 0;
   cameraShakePower = 0;
   coinsBankValue += Math.floor(coinsRun);
-  finalScore.textContent = `Score final: ${Math.floor(score)}`;
-  finalCoins.textContent = `Monedas ganadas: ${Math.floor(coinsRun)}`;
+  clearRunCheckpoint();
+  const records = recordRunResult(); // tambien guarda el perfil (banco incluido)
+  finalScore.textContent = `Score final: ${Math.floor(score)}${records.newBestScore ? " · ¡NUEVO RECORD!" : ""}`;
+  finalCoins.textContent = `Monedas ganadas: ${Math.floor(coinsRun)} · Oleada ${wave} · ${killsRun} bajas`;
+  if (finalRecord) {
+    finalRecord.textContent = records.newBestScore
+      ? `Record anterior: ${records.previousBestScore}`
+      : `Record: ${profileStats.bestScore} · Mejor oleada: ${profileStats.bestWave}${records.newBestWave ? " (¡nueva!)" : ""}`;
+    finalRecord.classList.toggle("new-record", records.newBestScore);
+  }
   audioEngine.fadeOutMusicEnhanced(1.5, true);
   audioEngine.gameOver();
   gameOverOverlay.classList.add("show");

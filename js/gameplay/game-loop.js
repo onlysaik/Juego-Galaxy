@@ -1,4 +1,4 @@
-// Main gameplay frame: movement, spawns, timers, and orchestration.
+﻿// Main gameplay frame: movement, spawns, timers, and orchestration.
 function updateGameStateFrame() {
   if (!running || !player) return;
 
@@ -145,13 +145,18 @@ function updateGameStateFrame() {
 
   updateEnemyFormationState();
   updateEnemyProjectileState();
+  if (!running) return;
   updateBossState();
 
   resolveEnemyShotCollisions();
   resolveBossShotCollisions();
+  // El jefe pudo caer (intermision) en este frame: no seguir simulando.
+  if (!running) return;
   resolveContactDamage();
+  // Game Over durante el contacto: no generar jefe ni FX sobre una partida terminada.
+  if (!running) return;
 
-  if (!boss && !bossSpawned && enemiesToSpawn <= 0 && enemies.length === 0) {
+  if (!boss && !bossSpawned && enemiesToSpawn <= 0 && enemies.length === 0 && specialPulseQueue.length === 0) {
     spawnBossUnit();
   }
 
@@ -165,7 +170,9 @@ function updateGameStateFrame() {
     updateHud();
   }
 
-  if (waveTimer % 6 === 0) {
+  audioAdaptiveCounter += 1;
+  if (audioAdaptiveCounter >= 6) {
+    audioAdaptiveCounter = 0;
     const projectileIntensity = clamp((bullets.length + enemyProjectiles.length * 1.2) / Math.max(1, GAME_TUNING.globalFxLiteThreshold), 0, 1.5);
     const lowHealth = player.energy <= maxEnergy * 0.34;
     audioEngine.updateAdaptiveState({

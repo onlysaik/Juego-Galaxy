@@ -1,4 +1,4 @@
-// Boss combat: spawn, attack patterns, and movement tick.
+﻿// Boss combat: spawn, attack patterns, and movement tick.
 function spawnBossUnit() {
   const hpBase = 30 + wave * 12;
   boss = {
@@ -127,6 +127,7 @@ function fireBossWeaponPattern(bossShip) {
   }
 
   bossShip.vulnerableFrames = 40;
+  bossShip.dpsTextShown = false;
 }
 
 function updateBossState() {
