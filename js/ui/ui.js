@@ -676,21 +676,37 @@ function renderIntermissionOffers() {
     card.append(tag, title, offerMeta, desc, cost, buyBtn);
     intermissionOffers.appendChild(card);
   }
+
+  // Cada accion de la tienda termina re-renderizando: buen punto para guardar.
+  saveRunCheckpoint();
 }
 
-function openIntermissionShop(nextWave) {
+function openIntermissionShop(nextWave, restoredShop = null) {
   pendingIntermissionWave = nextWave;
   phase = "intermission";
   running = false;
-  intermissionRerollsLeft = 1;
-  intermissionRerollUses = 0;
-  intermissionPurchasedOfferIds = [];
+  releaseAllKeys();
   intermissionPurchaseInFlightId = null;
-  intermissionLastPurchasedOfferId = null;
-  intermissionLockedOfferId = null;
-  intermissionLockedOfferSnapshot = null;
-  intermissionTransmuteUsed = false;
-  rollIntermissionOffers();
+  if (restoredShop) {
+    intermissionOffersState = restoredShop.offers;
+    intermissionPurchasedOfferIds = restoredShop.purchasedIds;
+    intermissionLastPurchasedOfferId = restoredShop.lastPurchasedId;
+    intermissionRerollsLeft = restoredShop.rerollsLeft;
+    intermissionRerollUses = restoredShop.rerollUses;
+    intermissionLockedOfferId = restoredShop.lockedOfferId;
+    intermissionLockedOfferSnapshot = restoredShop.lockedOfferSnapshot;
+    intermissionTransmuteUsed = restoredShop.transmuteUsed;
+    renderIntermissionOffers();
+  } else {
+    intermissionRerollsLeft = 1;
+    intermissionRerollUses = 0;
+    intermissionPurchasedOfferIds = [];
+    intermissionLastPurchasedOfferId = null;
+    intermissionLockedOfferId = null;
+    intermissionLockedOfferSnapshot = null;
+    intermissionTransmuteUsed = false;
+    rollIntermissionOffers();
+  }
   intermissionScreen.classList.add("show");
   intermissionScreen.setAttribute("aria-hidden", "false");
 }
@@ -718,6 +734,9 @@ function renderShop() {
   const fireDelta = Math.round((1 - activeStats.fireDelayMult) * 100);
   const dashDelta = Math.round((1 - activeStats.dashCooldownMult) * 100);
   bankCoins.textContent = `Monedas totales: ${Math.floor(coinsBankValue)}`;
+  renderProfileStats();
+  // En pausa la nave ya esta desplegada: cambiarla no afectaria a la partida en curso.
+  const hangarLocked = phase === "paused";
   selectedSkinText.textContent = `Nave activa: ${activeSkin.name} · casco ${activeStats.maxEnergy} · motor ${speedDelta >= 0 ? "+" : ""}${speedDelta}%`;
   defaultUpgradeText.textContent = `Base: ${POWER_UP_DEFS[activeSkin.defaultUpgrade].name} · cadencia ${fireDelta >= 0 ? "+" : ""}${fireDelta}% · dash ${dashDelta >= 0 ? "+" : ""}${dashDelta}%`;
   skinGrid.innerHTML = "";
@@ -762,21 +781,25 @@ function renderShop() {
     button.className = isOwned ? "secondary" : "ghost";
 
     if (isOwned) {
-      button.textContent = isSelected ? "Seleccionada" : "Seleccionar";
-      button.disabled = isSelected;
+      button.textContent = isSelected ? "Seleccionada" : hangarLocked ? "En partida" : "Seleccionar";
+      button.disabled = isSelected || hangarLocked;
       button.addEventListener("click", () => {
+        if (phase === "paused") return;
         selectedSkin = skin.id;
+        saveProfile();
         renderShop();
       });
     } else {
-      button.textContent = "Comprar";
-      button.disabled = coinsBankValue < skin.price;
+      button.textContent = hangarLocked ? "En partida" : "Comprar";
+      button.disabled = hangarLocked || coinsBankValue < skin.price;
       button.addEventListener("click", () => {
-        if (coinsBankValue >= skin.price) {
+        if (phase === "paused") return;
+        if (coinsBankValue >= skin.price && !ownedSkins.includes(skin.id)) {
           coinsBankValue -= skin.price;
           ownedSkins.push(skin.id);
           selectedSkin = skin.id;
           recentPurchasedSkinId = skin.id;
+          saveProfile();
           renderShop();
           updateHud();
           setTimeout(() => {
@@ -792,6 +815,36 @@ function renderShop() {
     card.append(preview, name, statBox, price, button);
     skinGrid.appendChild(card);
   }
+}
+
+function renderProfileStats() {
+  if (!profileStatsText) return;
+  const parts = [
+    `Record: ${profileStats.bestScore}`,
+    `Mejor oleada: ${profileStats.bestWave}`,
+    `Partidas: ${profileStats.runsPlayed}`,
+    `Bajas: ${profileStats.totalKills}`,
+    `Jefes: ${profileStats.totalBossesDefeated}`,
+  ];
+  profileStatsText.textContent = parts.join(" · ");
+}
+
+function refreshResumeButton() {
+  if (!resumeBtn) return;
+  const checkpoint = phase === "menu" ? loadRunCheckpoint() : null;
+  resumeBtn.classList.toggle("hidden", !checkpoint);
+  resumeBtn.disabled = !checkpoint;
+  if (checkpoint) {
+    const diffName = checkpoint.difficulty;
+    resumeBtn.textContent = `Reanudar oleada ${checkpoint.nextWave}`;
+    resumeBtn.title = `Partida guardada ${formatSavedAgo(checkpoint.savedAt)} · ${diffName} · score ${Math.floor(checkpoint.score)}`;
+  }
+  if (phase === "menu") {
+    menuStateText.textContent = checkpoint
+      ? `Tienes una partida guardada en la oleada ${checkpoint.nextWave} (${formatSavedAgo(checkpoint.savedAt)}). Iniciar una nueva la descartara.`
+      : "Configura tu nave y comienza una nueva partida.";
+  }
+  return checkpoint;
 }
 
 function updateHud() {
@@ -943,6 +996,7 @@ intermissionRerollBtn.addEventListener("click", () => {
   audioEngine.uiReroll();
   intermissionLockedOfferId = null;
   intermissionLockedOfferSnapshot = null;
+  renderIntermissionOffers();
   updateHud();
 });
 
@@ -974,9 +1028,11 @@ function openMenu(menuMode = "main") {
 
   continueBtn.classList.toggle("hidden", !canContinue);
   continueBtn.disabled = !canContinue;
-  menuStateText.textContent = canContinue
-    ? "Partida en pausa. Puedes continuar o iniciar una nueva partida."
-    : "Configura tu nave y comienza una nueva partida.";
+  releaseAllKeys();
+  refreshResumeButton();
+  if (canContinue) {
+    menuStateText.textContent = "Partida en pausa. Puedes continuar o iniciar una nueva partida.";
+  }
 
   renderShop();
   updateHud();
@@ -987,6 +1043,9 @@ function continueGame() {
   if (phase !== "paused") return;
   running = true;
   phase = "playing";
+  releaseAllKeys();
+  lastFrameTime = 0;
+  frameAccumulator = 0;
   audioEngine.resumeAudio();
   setMenuVisibility(false);
   updateHud();

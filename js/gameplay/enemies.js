@@ -1,4 +1,4 @@
-// Enemy units: spawn, patterns, movement, and enemy projectile state.
+﻿// Enemy units: spawn, patterns, movement, and enemy projectile state.
 function spawnEnemyUnit() {
   const size = 40;
   const speedBase = 1.5 + Math.random() * 2.2 + wave * 0.24;
@@ -213,10 +213,11 @@ function updateEnemyFormationState() {
 
 function updateEnemyProjectileState() {
   const hasPlayer = !!player;
-  const playerHx = hasPlayer ? player.x + player.w * 0.24 : 0;
-  const playerHy = hasPlayer ? player.y + player.h * 0.2 : 0;
-  const playerHw = hasPlayer ? Math.max(2, player.w * 0.52) : 0;
-  const playerHh = hasPlayer ? Math.max(2, player.h * 0.6) : 0;
+  const playerHitbox = hasPlayer ? getPlayerHitbox(player) : null;
+  const playerHx = hasPlayer ? playerHitbox.x : 0;
+  const playerHy = hasPlayer ? playerHitbox.y : 0;
+  const playerHw = hasPlayer ? playerHitbox.w : 0;
+  const playerHh = hasPlayer ? playerHitbox.h : 0;
 
   for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
     const p = enemyProjectiles[i];

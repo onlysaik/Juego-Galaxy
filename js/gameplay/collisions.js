@@ -1,4 +1,4 @@
-// Collision resolution: shots vs enemies/boss and direct contact damage.
+﻿// Collision resolution: shots vs enemies/boss and direct contact damage.
 function resolveEnemyShotCollisions() {
   const aliveEnemies = [];
   for (const enemy of enemies) {
@@ -41,6 +41,7 @@ function resolveEnemyShotCollisions() {
           trySpawnRecoveryDrop(enemy);
           registerAggressiveKill(enemy, wasAggressive);
           gainSpecialCharge(enemy.isElite ? 16 : wasAggressive ? 9 : 6);
+          killsRun += 1;
           enemyDestroyed = true;
           break;
         }
@@ -72,7 +73,8 @@ function resolveBossShotCollisions() {
       const dpsWindowMult = boss.vulnerableFrames > 0 ? 1.45 : 0.72;
       boss.hp -= bulletDamage * dpsWindowMult;
       score += 2 * difficulty.scoreMult;
-      if (boss.vulnerableFrames > 0) {
+      if (boss.vulnerableFrames > 0 && !boss.dpsTextShown) {
+        boss.dpsTextShown = true;
         addFloatingText("DPS WINDOW", bullet.x, bullet.y, "critical");
       }
       gainSpecialCharge(0.5);
@@ -84,6 +86,7 @@ function resolveBossShotCollisions() {
   }
 
   if (boss.hp <= 0) {
+    bossesDefeatedRun += 1;
     const bossReward = 18 + wave * 6;
     score += bossReward * 8 * difficulty.scoreMult;
     coinsRun += bossReward * difficulty.coinMult;
@@ -120,6 +123,8 @@ function resolveContactDamage() {
     if (intersectsRect(playerHx, playerHy, playerHw, playerHh, enemyHx, enemyHy, enemyHw, enemyHh)) {
       enemies.splice(i, 1);
       applyPlayerDamage(difficulty.enemyDamage);
+      // endRun() vacia la lista de enemigos: salir antes de leer indices invalidos.
+      if (!running) return;
     }
   }
 

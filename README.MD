@@ -378,10 +378,10 @@ Input → Update State → Collisions → Render
 ### Notas de Desarrollo
 
 - **No hay dependencias externas** (propósito educativo)
-- **localStorage** para persistencia (skins comprados, settings)
+- **localStorage** para persistencia (`js/core/save.js`): banco de monedas, skins comprados, nave seleccionada, records (mejor score, mejor oleada, bajas, jefes) y un punto de control en cada intermision para reanudar la partida tras cerrar o recargar la pagina
 - **Responsive**: Funciona desktop y tablets (touch/mouse)
 - **Accesibilidad**: ARIA labels, high contrast mode, navegación teclado
-- **Debugging**: Hitbox overlay (B), control de boss fire rate (-/+), rastreo orb ([/])
+- **Debugging** (solo abriendo el juego con `?debug` en la URL): Hitbox overlay (B), control de boss fire rate (-/+), rastreo orb ([/])
 
 ---
 

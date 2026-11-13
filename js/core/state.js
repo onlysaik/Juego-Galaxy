@@ -54,8 +54,15 @@ const intermissionLockBtn = document.getElementById("intermissionLockBtn");
 const intermissionTransmuteBtn = document.getElementById("intermissionTransmuteBtn");
 const intermissionContinueBtn = document.getElementById("intermissionContinueBtn");
 const intermissionHint = document.getElementById("intermissionHint");
+const resumeBtn = document.getElementById("resumeBtn");
+const profileStatsText = document.getElementById("profileStats");
+const finalRecord = document.getElementById("finalRecord");
 
 const keys = { left: false, right: false, up: false, down: false, space: false, dash: false };
+
+function releaseAllKeys() {
+  for (const key of Object.keys(keys)) keys[key] = false;
+}
 
 const assets = {
   enemy: createAsset("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cmVjdCB4PSI1IiB5PSI0IiB3aWR0aD0iMzAiIGhlaWdodD0iMzIiIHJ4PSI1IiBmaWxsPSIjMTExODI3Ii8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMjAiIGhlaWdodD0iNiIgcng9IjIiIGZpbGw9IiMyMmQzZWUiLz48Y2lyY2xlIGN4PSIxNCIgY3k9IjI2IiByPSIzIiBmaWxsPSIjZWY0NDQ0Ii8+PGNpcmNsZSBjeD0iMjYiIGN5PSIyNiIgcj0iMyIgZmlsbD0iI2VmNDQ0NCIvPjwvc3ZnPg=="),
@@ -161,3 +168,6 @@ let currentPerformancePreset = "balanced";
 let hudFrameCounter = 0;
 let wasDashReady = false;
 let wasSpecialReady = false;
+let audioAdaptiveCounter = 0;
+let killsRun = 0;
+let bossesDefeatedRun = 0;

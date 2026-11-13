@@ -1,5 +1,8 @@
 ﻿// App entrypoint: input bindings, frame loop, and boot lifecycle.
 function gameLoop(timestamp) {
+  // Pedir el siguiente frame primero: si una excepcion escapa de la simulacion,
+  // el bucle sigue vivo en lugar de congelar el juego hasta recargar.
+  animationId = requestAnimationFrame(gameLoop);
   if (!lastFrameTime) lastFrameTime = timestamp;
 
   const dtRaw = timestamp - lastFrameTime;
@@ -20,10 +23,38 @@ function gameLoop(timestamp) {
 
   draw();
   lastFrameTime = timestamp;
-  animationId = requestAnimationFrame(gameLoop);
 }
 
+// Atajos de ajuste (hitboxes, cadencia/rastreo del jefe) solo con ?debug en la URL.
+const DEBUG_SHORTCUTS_ENABLED = new URLSearchParams(window.location.search).has("debug");
+
+function handleDebugShortcut(event) {
+  if (!event.repeat && event.code === "KeyB") {
+    GAME_TUNING.debugHitboxes = !GAME_TUNING.debugHitboxes;
+    return true;
+  }
+  if (event.code === "Minus") {
+    GAME_TUNING.bossFireRate = clamp(GAME_TUNING.bossFireRate - 0.1, 0.5, 2.2);
+    return true;
+  }
+  if (event.code === "Equal") {
+    GAME_TUNING.bossFireRate = clamp(GAME_TUNING.bossFireRate + 0.1, 0.5, 2.2);
+    return true;
+  }
+  if (event.code === "BracketLeft") {
+    GAME_TUNING.bossOrbTracking = clamp(GAME_TUNING.bossOrbTracking - 0.1, 0.3, 2.4);
+    return true;
+  }
+  if (event.code === "BracketRight") {
+    GAME_TUNING.bossOrbTracking = clamp(GAME_TUNING.bossOrbTracking + 0.1, 0.3, 2.4);
+    return true;
+  }
+  return false;
+}
+
+loadProfile();
 renderShop();
+refreshResumeButton();
 applyPerformancePreset(currentPerformancePreset);
 initDisplayModePreference();
 initUiPresentationPreferences();
@@ -52,30 +83,7 @@ document.addEventListener("keydown", (event) => {
     return;
   }
 
-  if (!event.repeat && event.code === "KeyB") {
-    GAME_TUNING.debugHitboxes = !GAME_TUNING.debugHitboxes;
-    return;
-  }
-
-  if (event.code === "Minus") {
-    GAME_TUNING.bossFireRate = clamp(GAME_TUNING.bossFireRate - 0.1, 0.5, 2.2);
-    return;
-  }
-
-  if (event.code === "Equal") {
-    GAME_TUNING.bossFireRate = clamp(GAME_TUNING.bossFireRate + 0.1, 0.5, 2.2);
-    return;
-  }
-
-  if (event.code === "BracketLeft") {
-    GAME_TUNING.bossOrbTracking = clamp(GAME_TUNING.bossOrbTracking - 0.1, 0.3, 2.4);
-    return;
-  }
-
-  if (event.code === "BracketRight") {
-    GAME_TUNING.bossOrbTracking = clamp(GAME_TUNING.bossOrbTracking + 0.1, 0.3, 2.4);
-    return;
-  }
+  if (DEBUG_SHORTCUTS_ENABLED && handleDebugShortcut(event)) return;
 
   if (event.code === "ArrowLeft"  || event.code === "KeyA") keys.left  = true;
   if (event.code === "ArrowRight" || event.code === "KeyD") keys.right = true;
@@ -102,6 +110,16 @@ startBtn.addEventListener("click", () => {
   runStartNewGame();
 });
 
+if (resumeBtn) {
+  resumeBtn.addEventListener("click", () => {
+    audioEngine.unlock();
+    if (!resumeRunFromCheckpoint()) {
+      refreshResumeButton();
+      audioEngine.uiError();
+    }
+  });
+}
+
 continueBtn.addEventListener("click", () => {
   audioEngine.unlock();
   continueGame();
@@ -111,6 +129,16 @@ restartBtn.addEventListener("click", () => {
   audioEngine.unlock();
   runStartNewGame();
 });
+
+if (resumeBtn) {
+  resumeBtn.addEventListener("click", () => {
+    audioEngine.unlock();
+    if (!resumeRunFromCheckpoint()) {
+      refreshResumeButton();
+      audioEngine.uiError();
+    }
+  });
+}
 
 menuBtn.addEventListener("click", () => {
   gameOverOverlay.classList.remove("show");
@@ -125,6 +153,7 @@ pauseBtn.addEventListener("click", () => {
 difficultySelect.addEventListener("change", () => {
   difficulty = getDifficultyConfig();
   if (player) player.speed = difficulty.playerSpeed * player.skinStats.speedMult;
+  if (phase === "menu") saveProfile();
 });
 
 performancePreset.addEventListener("change", () => {
@@ -204,18 +233,31 @@ if (audioUiSlider) {
     const v = clamp(Number(audioUiSlider.value) / 100, 0, 1);
     audioEngine.setBusLevels({ ui: v });
     persistUiPreference("gg_audio_ui", String(v));
+  });
+}
 
-  if (audioMusicSlider) {
-    audioMusicSlider.addEventListener("input", () => {
-      const v = clamp(Number(audioMusicSlider.value) / 100, 0, 1);
-      audioEngine.setBusLevels({ music: v });
-      persistUiPreference("gg_audio_music", String(v));
-    });
-  }
+if (audioMusicSlider) {
+  audioMusicSlider.addEventListener("input", () => {
+    const v = clamp(Number(audioMusicSlider.value) / 100, 0, 1);
+    audioEngine.setBusLevels({ music: v });
+    persistUiPreference("gg_audio_music", String(v));
   });
 }
 
 document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+// Al perder el foco el navegador no envia keyup: soltar todo y pausar.
+window.addEventListener("blur", () => {
+  releaseAllKeys();
+  pauseGame();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    releaseAllKeys();
+    pauseGame();
+  }
+});
 
 animationId = requestAnimationFrame(gameLoop);
 
@@ -235,4 +277,5 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 window.addEventListener("beforeunload", () => {
   cancelAnimationFrame(animationId);
+  saveProfile();
 });
